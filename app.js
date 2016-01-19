@@ -1,72 +1,218 @@
 let Main = React.createClass({
 
-   getDefaultProps() {
-      return {
-         lol: 'lolas'
-      }
-   },
-
    getInitialState() {
-      let rows = 14;
-      let cols = 17;
+      let cols = 29;
+      let rows = 32;
       let grid = [];
+
+
+      let charCoords = [Math.floor(rows / 2), Math.floor(cols / 2)];
+
+      let generatedCells = {
+         weapons: [],
+         healths: [],
+         enemies: [],
+         blocks: [],
+         paths: [],
+         goal: '1_22'
+      };
+
       _.times(rows, (i) => { 
          grid.push([]);
-         _.times(cols, () => { grid[i].push(0) })
+         _.times(cols, (j) => { 
+            grid[i].push(' ');
+            generatedCells.blocks.push(`${i}_${j}`)
+         });
       });
-      let charCoords = [2, 2];
 
-      return {rows, cols, grid, charCoords};
+      return {rows, cols, grid, charCoords, generatedCells};
    },
 
    componentDidMount() {
-      let {grid} = this.state;
-      grid[2][2] = 1;
-      console.log(grid)
-      this.setState({grid: grid});
       $(document.body).on('keydown', this.handleKeyDown);
+      let {generatedCells, charCoords} = this.state;
+   
+      let {weapons, healths, enemies, blocks, paths, goal} = generatedCells;
+
+      weapons.push(
+         `${_.random(9, 10)}_${_.random(9, 10)}`
+      );
+      healths.push(
+         `${_.random(15, 20)}_${_.random(15, 13)}`,
+         `${_.random(7, 9)}_${_.random(7, 9)}`,
+         `${_.random(21, 23)}_${_.random(21, 24)}`
+      );
+      enemies.push(
+         '10_9',
+         '3_6',
+         '5_4'
+      );
+
+      // safe Y = cols - 4
+      // safe x = rows - 3
+      // blocks.splice(blocks.indexOf(healths[1]), 1)
+      goal = '6_15'; // this is NOT working, it's being set from getInitialState
+
+      this.setState({generatedCells: generatedCells})
+      
+      // set the map's playable path
+      this.setPathsInMap();
    },
 
-   componentWillUnmount: function() {
+   setPathsInMap() {
+      let {generatedCells, charCoords} = this.state;
+      let {weapons, healths, enemies, paths, blocks, goal} = generatedCells;
+
+      let myCoords = `${charCoords[0]}_${charCoords[1]}`;
+      
+      let currentCell = myCoords;
+      let homeCell = myCoords
+
+      let remainingTargets = [
+         weapons[0], 
+         healths[0], 
+         healths[1], 
+         healths[2], 
+         goal,
+         '1_1', '17_4', '8_8'
+      ];
+
+      remainingTargets.forEach((e,i) => {
+
+         currentCell = homeCell;
+         let targetX = parseInt(e.split('_')[0]);
+         let targetY = parseInt(e.split('_')[1]);
+
+         //carvePath towards targets
+         let count = 0
+         while(currentCell != e){
+
+            let currentX = parseInt(currentCell.split('_')[0]);
+            let currentY = parseInt(currentCell.split('_')[1]);
+
+            // console.log('current:', currentX, currentY)
+
+            if (count == 100) { console.log('broke'); break; };
+
+            this.carvePath(paths, blocks, currentCell);
+            let n = _.random(0, 1);
+            if(n == 1){
+               if (targetX > currentX) {
+                  currentX++;
+               } else if (targetX < currentX) {
+                  currentX--;
+               } else if(targetY > currentY) {
+                  currentY++;
+               } else if (targetY < currentY) {
+                  currentY--;
+               }
+            } else {
+               if(targetY > currentY) {
+                  currentY++;
+               } else if (targetY < currentY) {
+                  currentY--;
+               } else if (targetX > currentX) {
+                  currentX++;
+               } else if (targetX < currentX) {
+                  currentX--;
+               }
+            }
+
+
+            currentCell = currentX + '_' + currentY;
+            count++; // increment for while loop
+
+            // console.log('current after:', currentX, currentY)
+         }
+         this.carvePath(paths, blocks, currentCell); //if not called again here, it won't carve the very last cell
+
+      })
+   },
+
+   carvePath(paths, blocks, coords) {
+
+      let possibleToCarve = () => {
+         return true;
+      };
+
+      if(possibleToCarve){
+         paths.push(coords);
+         blocks.splice(blocks.indexOf(coords), 1);
+      }
+      
+   },
+
+   componentWillUnmount() {
       $(document.body).off('keydown', this.handleKeyDown);
    },
 
-   moveMyChar(direction) {
+   moveMyChar(direction) { // changes state
 
-      let {grid, charCoords} = this.state;
+      let {grid, charCoords, cols, generatedCells} = this.state;
 
       let cc = charCoords.slice(); // for brevity
 
       let x = cc[0];
       let y = cc[1];
 
+      console.log('generatedCells.blocks:', generatedCells.blocks)
+
+      let targetCellIsAvailable = (x, y) => {
+         console.log('generatedCells.blocks.indexOf(x_y):', generatedCells.blocks.indexOf(`${x}_${y}`))
+
+         return generatedCells.blocks.indexOf(`${x}_${y}`) == -1;
+      };
+
       switch(direction) {
       case 'up':
-         if (cc[0] !== 0) {               // guard: not top of table
+         if (x !== 0 && targetCellIsAvailable(x - 1, y)) {               // guard: not top of table & moveable to
             this.setNewCharLocation(cc, x, y, 0, direction);
          }
          break;
       case 'down':
-         if (cc[0] !== grid.length - 1) { // guard: not bottom of table
+         if (x !== grid.length - 1 && targetCellIsAvailable(x + 1, y)) { // guard: not bottom of table & moveable to
             this.setNewCharLocation(cc, x, y, 0, direction);
          }
          break;
       case 'left':
-         if (cc[1] !== 0) {               // guard: not extreme left of table
+         if (y !== 0 && targetCellIsAvailable(x, y - 1)) {               // guard: not extreme left of table & moveable to
             this.setNewCharLocation(cc, x, y, 1, direction);
          }
          break;
       case 'right':
-         if (cc[1] !== grid.length - 1) { // guard: not extreme right of table
+         if (y !== cols - 1 && targetCellIsAvailable(x, y + 1)) {       // guard: not extreme right of table & moveable to
             this.setNewCharLocation(cc, x, y, 1, direction);
          }
          break;
       default:
          break;
       }
+
       charCoords = cc.slice();
-      console.log(charCoords)
-      this.setState({grid: grid, charCoords: charCoords});
+      console.log('charCoords after move:', charCoords)
+      let{weapons, healths} = generatedCells;
+      this.removeFromItemsIfNommed(weapons, charCoords, 'w');
+      this.removeFromItemsIfNommed(healths, charCoords, 'h');
+
+      this.setState({
+         grid: grid,
+         charCoords: charCoords,
+         generatedCells: generatedCells
+      });
+   },
+
+   removeFromItemsIfNommed(arr, charCoords, name) {
+      arr.forEach((e, i) => {
+         if(e.split('_')[0] == charCoords[0] && e.split('_')[1] == charCoords[1]){ // char is on weapon cell
+            arr.splice(i, 1) // delete from arr
+            // log for debugging:
+            switch(name) {
+            case 'w': console.log('nommed weapon'); break;
+            case 'h': console.log('nommed health'); break;
+            }
+         }
+      });
+      
    },
 
    setNewCharLocation(cc, x, y, indexToChange, direction) {
@@ -85,42 +231,46 @@ let Main = React.createClass({
       } else {
          y = cc[indexToChange];
       }
+      
+
+
       grid[x][y] = 1;
    },
 
    handleKeyDown(e){
       switch(e.keyCode) {
-      case 38: // up
-         this.moveMyChar('up');
-         break;
-      case 40: // down
-         this.moveMyChar('down');
-         break;
-      case 37: // left
-         this.moveMyChar('left');
-         break;
-      case 39: // right
-         this.moveMyChar('right');
-         break;
-      default: 
-         break;
+      case 38:this.moveMyChar('up');break;
+      case 40:this.moveMyChar('down');break;
+      case 37:this.moveMyChar('left');break;
+      case 39:this.moveMyChar('right');break;
+      default: break;
       }
    },
 
    renderRows(e, i) {
-
-      let {grid, charCoords} = this.state;
+      let {grid, charCoords, generatedCells} = this.state;
+      let {weapons, healths, blocks, paths, goal} = generatedCells;
 
       let classToAdd = '';
-      
 
       let tds = e.map((l, j) => {
+
          if (charCoords[0] == i && charCoords[1] == j) {
             classToAdd = 'charCell';
-         } else {
-            classToAdd = 'pathCell';
+         } else if(weapons.indexOf(`${i}_${j}`) !== -1) {
+            classToAdd = 'weaponCell'; // render a weapon cell
+         } else if(healths.indexOf(`${i}_${j}`) !== -1) {
+            classToAdd = 'healthCell'; // render a health cell
+         } else if(goal == `${i}_${j}`) {
+            classToAdd = 'goalCell'; // render the goal cell
+         } else if(goal == `${i}_${j}`) {
+            classToAdd = 'enemyCell'; // render the enemy cell
+         } else if(blocks.indexOf(`${i}_${j}`) !== -1) {
+            classToAdd = 'blockCell'; // render a block cell
+         } else if(paths.indexOf(`${i}_${j}`) !== -1) {
+            classToAdd = 'pathCell'; // render a path cell
          }
-         return (<td className={classToAdd} key={j}>{l}</td>);
+         return (<td className={classToAdd} key={j}></td>);
       })
       return <tr key={i}>{tds}</tr>
    },

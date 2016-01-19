@@ -1,13 +1,18 @@
-$table-cell-dimension: 30px;
+$table-cell-dimension: 20px;
+
+// Cell colors
 $char-cell-color: aquamarine;
 $path-cell-color: brown;
 $block-cell-color: lightgray;
+$health-cell-color: lightgreen;
+$enemy-cell-color: red;
+$weapon-cell-color: yellow;
+$goal-cell-color: green;
 
 table {
 	border: 1px solid black;
+	border-collapse: collapse;
 }
-
-table { border-collapse: collapse; }
 
 // td + td,
 // th + th { border-left: 1px solid; }
@@ -28,4 +33,20 @@ td {
 
 .blockCell {
 	background-color: $block-cell-color;
+}
+
+.healthCell {
+	background-color: $health-cell-color;
+}
+
+.enemyCell {
+	background-color: $enemy-cell-color;	
+}
+
+.weaponCell {
+	background-color: $weapon-cell-color;
+}
+
+.goalCell {
+  background-color: $goal-cell-color;
 }
