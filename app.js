@@ -1,8 +1,8 @@
 let Main = React.createClass({
 
    getInitialState() {
-      let cols = 29;
-      let rows = 32;
+      let cols = 25;
+      let rows = 35;
       let grid = [];
 
 
@@ -14,7 +14,7 @@ let Main = React.createClass({
          enemies: [],
          blocks: [],
          paths: [],
-         goal: '1_22'
+         goal: []
       };
 
       _.times(rows, (i) => { 
@@ -30,23 +30,23 @@ let Main = React.createClass({
 
    componentDidMount() {
       $(document.body).on('keydown', this.handleKeyDown);
-      let {generatedCells, charCoords} = this.state;
-   
+      let {generatedCells, charCoords, cols, rows} = this.state;
       let {weapons, healths, enemies, blocks, paths, goal} = generatedCells;
+   
 
-      weapons.push(
-         `${_.random(9, 10)}_${_.random(9, 10)}`
-      );
-      healths.push(
-         `${_.random(15, 20)}_${_.random(15, 13)}`,
-         `${_.random(7, 9)}_${_.random(7, 9)}`,
-         `${_.random(21, 23)}_${_.random(21, 24)}`
-      );
-      enemies.push(
-         '10_9',
-         '3_6',
-         '5_4'
-      );
+      // weapons.push(
+      //    `${_.random(9, 10)}_${_.random(9, 10)}`
+      // );
+      // healths.push(
+      //    `${_.random(15, 20)}_${_.random(15, 13)}`,
+      //    `${_.random(7, 9)}_${_.random(7, 9)}`,
+      //    `${_.random(21, 23)}_${_.random(21, 24)}`
+      // );
+      // enemies.push(
+      //    '10_9',
+      //    '3_6',
+      //    '5_4'
+      // );
 
       // safe Y = cols - 4
       // safe x = rows - 3
@@ -60,22 +60,90 @@ let Main = React.createClass({
    },
 
    setPathsInMap() {
-      let {generatedCells, charCoords} = this.state;
+      let {generatedCells, charCoords, cols, rows} = this.state;
       let {weapons, healths, enemies, paths, blocks, goal} = generatedCells;
 
       let myCoords = `${charCoords[0]}_${charCoords[1]}`;
       
       let currentCell = myCoords;
-      let homeCell = myCoords
+      let homeCell = myCoords;
+
+      let getRandomCoords = (a, b) => {
+         return `${_.random(a - 1, a + 1)}_${_.random(b - 1, b + 1)}`;
+      }
+
+      let randomCoords = [
+         getRandomCoords(Math.floor(cols / 10), Math.floor(rows / 10)), //top left
+         getRandomCoords(Math.floor(cols / 10), cols - 6), // top right
+         getRandomCoords(rows - 6, Math.floor(cols / 10)), // bottom left
+         getRandomCoords(rows - 6, cols - 6), // bottom right
+         getRandomCoords(_.random(0, rows - 4), _.random(0, cols - 4)), // random 1
+         getRandomCoords(_.random(0, rows - 4), _.random(0, cols - 4)), // random 2
+         getRandomCoords(_.random(0, rows - 4), _.random(0, cols - 4)), // random 3
+         getRandomCoords(_.random(0, rows - 4), _.random(0, cols - 4)), // random 4
+         getRandomCoords(_.random(0, rows - 4), _.random(0, cols - 4)), // random 5
+         getRandomCoords(_.random(0, rows - 4), _.random(0, cols - 4)), // random 6
+      ];
+
+      console.log('topleft:', randomCoords[0])
+      console.log('topright:', randomCoords[1])
+      console.log('bottomleft:', randomCoords[2])
+      console.log('bottomright:', randomCoords[3])
+      console.log('random 1:', randomCoords[4])
+      console.log('random 2:', randomCoords[5])
+      console.log('random 3:', randomCoords[6])
+
+
+      let sampleAndRemove = () => {
+         if(randomCoords.length == 0) {
+            console.log('ERROR: No items in coords left!')
+            return;
+         }
+         let sample = _.sample(randomCoords)
+         console.log(sample)
+         console.log('index:', randomCoords.indexOf(sample))
+         randomCoords.splice(randomCoords.indexOf(sample), 1);
+         return sample;
+      }
+
+      // could implement _.shuffle() here
+
+      weapons.push(
+         sampleAndRemove()
+      );
+         
+      healths.push(
+         sampleAndRemove(),
+         sampleAndRemove(),
+         sampleAndRemove(),
+      );
+
+      goal.push(sampleAndRemove());
+
+      enemies.push(
+         '10_9',
+         '3_6',
+         '5_4'
+      );
 
       let remainingTargets = [
          weapons[0], 
          healths[0], 
          healths[1], 
          healths[2], 
-         goal,
-         '1_1', '17_4', '8_8'
+         goal[0],
+         sampleAndRemove(),
+         sampleAndRemove(),
+         sampleAndRemove(),
+         sampleAndRemove(),
+         sampleAndRemove(),
       ];
+
+      // THINGS TO BEAR IN MIND.
+      // When there is an item on the map, it's moveable to as well.
+      // Enemies not yet implemented.
+      // Where should player begin map from.
+      // Viewport.
 
       remainingTargets.forEach((e,i) => {
 
@@ -95,6 +163,8 @@ let Main = React.createClass({
             if (count == 100) { console.log('broke'); break; };
 
             this.carvePath(paths, blocks, currentCell);
+
+            // create jagged corridors and rooms with this:
             let n = _.random(0, 1);
             if(n == 1){
                if (targetX > currentX) {
