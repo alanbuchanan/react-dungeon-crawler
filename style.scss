@@ -1,26 +1,79 @@
-$table-cell-dimension: 20px;
+@import url(https://fonts.googleapis.com/css?family=VT323);
+
+$table-cell-dimension: 30px;
 
 // Cell colors
-$char-cell-color: aquamarine;
-$path-cell-color: brown;
-$block-cell-color: lightgray;
-$health-cell-color: lightgreen;
-$enemy-cell-color: red;
-$weapon-cell-color: yellow;
-$goal-cell-color: green;
+$char-cell-color: #E4FCF9;
+$path-cell-color: #E4CE8E;
+$block-cell-color: #2A363B;
+$health-cell-color: #60E550;
+$enemy-cell-color: #C93737;
+$weapon-cell-color: #E7A117;
+$goal-cell-color: #60316E;
+$boss-cell-color: blue;
+$body-bg-color: black;
 
-table {
-	border: 1px solid black;
-	border-collapse: collapse;
+html {
+	  height: 100%;
 }
 
-// td + td,
-// th + th { border-left: 1px solid; }
-// tr + tr { border-top: 1px solid; }
+@mixin centerhori() {
+	display: flex;
+	justify-content: center;
+	align-items: center;	
+}
+
+body {
+	background-color: $body-bg-color;
+	min-height: 90%;
+	display: flex;
+	flex-direction: column;
+	color: white;
+	font-family: 'VT323', ;
+}
+
+h1 {
+	@include centerhori();
+}
+
+#root {
+	@include centerhori();
+	flex: 1 0 auto;
+}
+
+footer {
+	@include centerhori();
+}
+
+table {
+	border-collapse: collapse;
+	display: inline-block;
+}
+
+.ui-table {
+	margin-left: 10px;
+	font-size: 20px;
+}
+
+.ui-table td {
+	width: 100px;
+	height: 30px
+}
 
 td {
 	width: $table-cell-dimension;
 	height: $table-cell-dimension;
+}
+
+tr {
+	background-color: $block-cell-color
+}
+
+a {
+	color: white;
+	&:visited, &:active {
+		color: white;
+	}
 }
 
 .charCell {
@@ -48,5 +101,14 @@ td {
 }
 
 .goalCell {
-  background-color: $goal-cell-color;
+  	background-color: $goal-cell-color;
+}
+
+.bossCell {
+
+}
+
+.bossCell:after {
+	@include centerhori();
+	content: '💀';
 }
