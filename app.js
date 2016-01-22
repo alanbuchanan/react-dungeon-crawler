@@ -50,7 +50,6 @@ let Main = React.createClass({
             generatedCells.blocks.push(`${i}_${j}`)
          });
       });
-      console.log('grid.......', grid)
 
       return {rows, cols, grid, gridSlice, charCoords, generatedCells, char, dungeon, itemValues, enemiesKilled};
    },
@@ -105,16 +104,12 @@ let Main = React.createClass({
          let res = [];
 
          if(cornerCoords.length == 0) {
-            console.log('ERROR: No items in coords left!')
             return;
          }
-
-         //TODO: If none left in cornerCoords, just generate new random coords here
 
          _.times(num, () => {
             let sample = _.sample(cornerCoords)
             cornerCoords.splice(cornerCoords.indexOf(sample), 1);
-            console.log('deleted sample ' + sample + ' from cornerCoords and now length is ' + cornerCoords.length)
             res.push(sample);
          });
 
@@ -146,9 +141,7 @@ let Main = React.createClass({
             let currentX = parseInt(currentCell.split('_')[0]);
             let currentY = parseInt(currentCell.split('_')[1]);
 
-            // console.log('current:', currentX, currentY)
-
-            if (count == 100) { console.log('broke'); break; };
+            if (count == 100) { break; };
 
             this.carvePath(paths, blocks, currentCell);
 
@@ -180,15 +173,12 @@ let Main = React.createClass({
             currentCell = currentX + '_' + currentY;
             count++; // increment while loop
 
-            // console.log('current after:', currentX, currentY)
          }
          this.carvePath(paths, blocks, currentCell); //if not called again here, it won't carve the very last cell
          
       })// end foreach
 
       let renderNEnemies = (num) => {
-         
-         console.log('charCoords:', charCoords)
 
          let res = [];
 
@@ -201,7 +191,6 @@ let Main = React.createClass({
                _.includes(healths, e) ||
                _.includes(goal, e) ||
                e == `${charCoords[0]}_${charCoords[1]}`){
-               console.log('DONT OVERWRITE!:', e)
                shuffledPaths.splice(shuffledPaths.indexOf(e), 1);
             }
          })
@@ -226,7 +215,6 @@ let Main = React.createClass({
                _.includes(goal, e) ||
                _.includes(enemies, e) ||
                e == `${charCoords[0]}_${charCoords[1]}`){
-               console.log(e + ' included!')
             } else {
                availablePaths.push(e);
             }
@@ -330,6 +318,7 @@ let Main = React.createClass({
          if(enemyToDamage.health <= 0){
             char.xp += itemValues.xpIncrement;
             boss.coords = [];
+            this.setState({boss: boss})
             alert('You win!')
             // won. re-render!
             this.reInit(100, 0, 1, 1, 1, 1, 20, 10);
@@ -349,6 +338,7 @@ let Main = React.createClass({
             // check if char died
             if(char.health <= 0){
                char.health = 0;
+               this.setState({char: char})
                alert('You died!')
                // died. re-render!
                this.reInit(100, 0, 1, 1, 1, 1, 20, 10);
@@ -382,7 +372,7 @@ let Main = React.createClass({
             // level up
             if(enemiesKilled > char.level) {
                char.level = enemiesKilled,
-               itemValues.attackDamage += 10;
+               itemValues.attackDamage += 20;
                this.setState({
                   char: char,
                   enemiesKilled: 0,
@@ -399,6 +389,7 @@ let Main = React.createClass({
             // check if char died
             if(char.health <= 0){
                char.health = 0;
+               this.setState({char: char})
                alert('You died!')
                // died. re-render!
                this.reInit(100, 0, 1, 1, 1, 1, 20, 10); //pass args here
@@ -495,10 +486,8 @@ let Main = React.createClass({
       } else {
 
          charCoords = cc.slice();
-         console.log('charCoords after move:', charCoords)
          this.removeFromItemsIfNommed(weapons, charCoords, 'w');
          this.removeFromItemsIfNommed(healths, charCoords, 'h');
-         // this.removeFromItemsIfNommed(enemyCoords, charCoords, 'e');
          
          // This is what's called when dead, but if this is out of the else, it makes the port fail!
          this.setState({
@@ -518,7 +507,6 @@ let Main = React.createClass({
             // log for debugging:
             switch(name) {
             case 'w': 
-               console.log('nommed weapon');
                arr.splice(i, 1)
                ++char.weapon;
                itemValues.attackDamage += 15;
@@ -528,17 +516,10 @@ let Main = React.createClass({
                })
                break;
             case 'h': 
-               console.log('nommed health');
                arr.splice(i, 1)
                char.health += itemValues.healthItem;
                this.setState({char: char})
                break;
-            // case 'e': 
-
-            //    console.log('nommed enemy');
-            //    // char.xp += itemValues.xpIncrement;
-            //    this.setState({char: char})
-            //    break;
             }
          }
       });
@@ -647,39 +628,40 @@ let Main = React.createClass({
 let UserInterface = React.createClass({
    render(){
       let {char, dungeon} = this.props.state
-      console.log('CHAR:', char)
       let showWeapon = (num) => {
          switch (char.weapon) {
-         case 1: return 'rusty dagger'; break;
-         case 2: return 'mace'; break;
-         case 3: return 'sword'; break;
-         case 4: return 'axe'; break;
+         case 1: return 'claws'; break;
+         case 2: return 'screwdriver'; break;
+         case 3: return 'hammer'; break;
+         case 4: return 'knife'; break;
          case 5: return 'chainsaw'; break;
-         default: console.log('error with weapon!'); break;
+         default: break;
          }
       }
       return (
          <table className="ui-table">
-            <tr>
-               <td>Level</td>
-               <td>{char.level}</td>
-            </tr>
-            <tr>
-               <td>Health</td>
-               <td>{char.health}</td>
-            </tr>            
-            <tr>
-               <td>Xp</td>
-               <td>{char.xp}</td>
-            </tr>
-            <tr>
-               <td>Weapon</td>
-               <td>{showWeapon()}</td>
-            </tr>
-            <tr>
-               <td>Dungeon #</td>
-               <td>{dungeon}</td>
-            </tr>
+            <tbody>
+               <tr>
+                  <td>Level</td>
+                  <td>{char.level}</td>
+               </tr>
+               <tr>
+                  <td>Health</td>
+                  <td>{char.health}</td>
+               </tr>            
+               <tr>
+                  <td>Meow points</td>
+                  <td>{char.xp}</td>
+               </tr>
+               <tr>
+                  <td>Weapon</td>
+                  <td>{showWeapon()}</td>
+               </tr>
+               <tr>
+                  <td>Kennel</td>
+                  <td>{dungeon}</td>
+               </tr>
+            </tbody>
          </table>
 
       )

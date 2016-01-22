@@ -12,6 +12,8 @@ $weapon-cell-color: #E7A117;
 $goal-cell-color: #60316E;
 $boss-cell-color: blue;
 $body-bg-color: black;
+// Sizes
+$emoji-size: 20px;
 
 html {
 	  height: 100%;
@@ -25,7 +27,7 @@ html {
 
 body {
 	background-color: $body-bg-color;
-	min-height: 90%;
+	min-height: 98%;
 	display: flex;
 	flex-direction: column;
 	color: white;
@@ -66,7 +68,7 @@ td {
 }
 
 tr {
-	background-color: $block-cell-color
+	background-color: $block-cell-color;
 }
 
 a {
@@ -76,8 +78,11 @@ a {
 	}
 }
 
-.charCell {
-	background-color: $char-cell-color;
+.enemyCell, .healthCell, .weaponCell, .charCell, .goalCell, .bossCell {
+	text-align: center;
+	background-color: $path-cell-color;
+	text-overflow: clip;
+	overflow: hidden;
 }
 
 .pathCell {
@@ -88,27 +93,31 @@ a {
 	background-color: $block-cell-color;
 }
 
-.healthCell {
-	background-color: $health-cell-color;
+.enemyCell:before, .healthCell:before, .weaponCell:before, .charCell:before, .goalCell:before, .bossCell:before {
+	font-size: $emoji-size;
 }
 
-.enemyCell {
-	background-color: $enemy-cell-color;	
+.enemyCell:before {
+	content: '🐶';
 }
 
-.weaponCell {
-	background-color: $weapon-cell-color;
+.healthCell:before {
+	content: '🍣';
 }
 
-.goalCell {
-  	background-color: $goal-cell-color;
+.weaponCell:before {
+	content: '💎';
 }
 
-.bossCell {
-
+.charCell:before {
+	content: '😼';
 }
 
-.bossCell:after {
-	@include centerhori();
-	content: '💀';
+.goalCell:before {
+	content: '⭐';
+	color: green;
+}
+
+.bossCell:before {
+	content: '🐩';
 }
